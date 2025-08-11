@@ -15,7 +15,7 @@ import requests
 
 from config import user_agent
 
-USER_AGENT = user_agent.USER_AGENT[0]
+USER_AGENT = user_agent.USER_AGENTS[0]
 # config = source.ff
 # BASE_URL = config.get('base_url')
 # DETAIL = config.get('detail')
@@ -239,6 +239,7 @@ class VideoDownload:
         ts_url = self.m3u8_to_tsfile()
         # 获取ts列表
         ts_list = self.get_ts_list(ts_url)
+        # print(ts_list)
         # 多线程下载
         self.Multithreading_download_ts_to_mp4(ts_list, max_workers)
 
