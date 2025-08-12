@@ -57,7 +57,6 @@ class SearcherFetcher:
             else:
                 page_ += 1
 
-
     # 处理查询结果
     def _handle_search_result(self,search_result):
         for i in search_result['list']:
