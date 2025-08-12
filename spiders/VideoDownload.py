@@ -25,12 +25,6 @@ USER_AGENT = user_agent.USER_AGENTS[0]
 """
 
 
-# https://vip.ffzy-online1.com/20230321/31971_882aef6a/index.m3u8 : M3U8
-# https://vip.ffzy-play2.com/share/51681a7c14879f9eca39669df858f75b : NORMAL
-
-# https://vip.ffzy-play2.com/20221213/9185_83e0890b/index.m3u8
-# https://vip.ffzy-play2.com/share/51681a7c14879f9eca39669df858f75b
-# https://vip.ffzy-play2.com/20221213/9185_83e0890b/index.m3u8?sign=a220641044bd92b4a5c8e614b26400b9
 
 # 任意一集的m3u8，下载器
 class VideoDownload:
