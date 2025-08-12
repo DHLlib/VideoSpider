@@ -58,9 +58,9 @@ class SearcherFetcher:
                 page_ += 1
 
     # 处理查询结果
-    def _handle_search_result(self,search_result):
+    def _handle_search_result(self, search_result):
         for i in search_result['list']:
-            self._search_result_list.append(i) # 列表追加
+            self._search_result_list.append(i)  # 列表追加
 
     # 获取查询结果
     def get_search_result_list(self):
