@@ -1,6 +1,8 @@
 ffzy:
   name: 非凡资源网
-  base_url: http://api.ffzyapi.com/api.php/provide/vod/
-  list: ?ac=list
-  search: ?ac=search&wd=
-  detail: ?ac=detail&ids=
+  base_url: http://api.ffzyapi.com/api.php/provide/vod/?ac=
+  list: list
+  search: search&wd=
+  detail: detail&ids=
+  page: pg=
+  page_size: pagesize=
