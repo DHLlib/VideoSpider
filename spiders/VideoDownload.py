@@ -101,8 +101,8 @@ class VideoDownload:
     # 下载ts
     def download_single_ts(self, ts_index, ts):
         url = self.ts_base_url + ts
-        max_retries = 3
-        retry_delay = 1
+        max_retries = 3 # 最大重试次数
+        retry_delay = 1 # 重试延迟
 
         for attempt in range(max_retries):
             try:
@@ -120,7 +120,7 @@ class VideoDownload:
                 error_msg = str(e)
                 if ("Remote end closed connection" in error_msg or
                         "Connection aborted" in error_msg):
-                    if attempt < max_retries - 1:
+                    if attempt < max_retries - 1: # 尝试次数未达到最大值
                         wait_time = retry_delay * (2 ** attempt)
                         print(f"连接问题，{wait_time}秒后重试...")
                         time.sleep(wait_time)
