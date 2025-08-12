@@ -72,7 +72,7 @@ class SearcherFetcher:
 
 
 if __name__ == '__main__':
-    s = SearcherFetcher('海')
+    s = SearcherFetcher('星期三')
     result_list = s.get_search_result_list()
     url = s.get_search_url()
     print(result_list, '\n', url)
