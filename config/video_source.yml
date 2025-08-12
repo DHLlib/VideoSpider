@@ -6,3 +6,4 @@ ffzy:
   detail: detail&ids=
   page: pg=
   page_size: pagesize=
+  type: t=
