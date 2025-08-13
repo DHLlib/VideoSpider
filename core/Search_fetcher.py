@@ -35,7 +35,7 @@ class SearcherFetcher:
         return self.video_name
 
     # 构建searchurl
-    def _build_search_url(self, page=1, page_size=50):
+    def _build_search_url(self, page=1, page_size=100):
         return (f"{self._base_url}"
                 f"{self._search_path}"
                 f"{self.video_name}&"
@@ -52,7 +52,7 @@ class SearcherFetcher:
             search_result = json.loads(result)
             self._handle_search_result(search_result)
             page_count = search_result.get('pagecount')
-            if page_count == page_:
+            if page_count <= page_:
                 break
             else:
                 page_ += 1
@@ -72,7 +72,7 @@ class SearcherFetcher:
 
 
 if __name__ == '__main__':
-    s = SearcherFetcher('星期三')
+    s = SearcherFetcher('奔跑吧')
     result_list = s.get_search_result_list()
     url = s.get_search_url()
     print(result_list, '\n', url)

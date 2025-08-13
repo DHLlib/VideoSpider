@@ -3,7 +3,7 @@
 # @author: DENGHAOLUAN
 # @file: Base_control.py
 # @time: 2025/8/12 17:09
-# DO EVERYTHING WHET YOU WANT
+# DO EVERYTHING WHET YOU WANT.
 
 # 基础控制器
 
