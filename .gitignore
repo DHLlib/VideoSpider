@@ -2,3 +2,4 @@
 ./.idea/
 /config/Class.json
 /core/get_video.py
+/output/
