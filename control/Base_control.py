@@ -9,6 +9,8 @@
 
 from core.Detail_fetcher import DetailFetcher
 from core.Search_fetcher import SearcherFetcher
+from download.VideoDownload import VideoDownload
+
 
 def get_detail(vod_id):
     return DetailFetcher(vod_id).get_play_lists(), DetailFetcher(vod_id).get_name()
@@ -46,7 +48,10 @@ if __name__ == '__main__':
     video_id = _result[choose_one][1]
 
     # 查询详情
-    detail,result_name = get_detail(video_id)
+    detail, result_name = get_detail(video_id)
     print("=" * 50 + "\n")
     print(f'电影名称：{result_name}')
     print(f'详情页：{detail}')
+    url = detail[1][0][1]
+    video_name_ = result_name + '-' + detail[1][0][0]
+    videodownloader = VideoDownload(url=url, name=video_name_).main()
