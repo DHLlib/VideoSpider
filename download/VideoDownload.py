@@ -6,7 +6,6 @@
 # @version:
 import os
 import re
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import urlparse
@@ -14,6 +13,7 @@ from urllib.parse import urlparse
 import requests
 
 from config import user_agent
+from .Ffmpeg_control import FfmpegControl
 
 USER_AGENT = user_agent.USER_AGENTS[0]
 # config = source.ff
@@ -44,6 +44,7 @@ class VideoDownload:
             self.m3u8_url)  # https://vip.ffzy-play2.com/20221213/9185_83e0890b/2000k/hls/
         self.ts_base_url = None
         self.output = f"{os.path.dirname(os.path.dirname(__file__))}/output"
+        self.ffmpeg = FfmpegControl(self.output, self.name)
 
     # 分流器
     def classifier(self):
@@ -92,6 +93,8 @@ class VideoDownload:
     def get_ts_list(self, url):
         result = requests.get(url=url, headers=self.headers).text
         ts_files = re.findall(r'([a-f0-9]+\.ts)', result)
+        with open(f'{self.output}/index.m3u8', 'w', encoding='utf-8') as w:
+            w.write(result)
         ts_list = []
         for ts_file in ts_files:
             ts_list.append(ts_file)
@@ -113,38 +116,27 @@ class VideoDownload:
                 )
                 response.raise_for_status()
                 content = response.content
-                return ts_index, content, len(content)  # 保持返回3个值
+                # 直接写入ts
+                with open(f'{self.output}/{ts}', 'wb') as ts_w:  # 使用二进制模式
+                    ts_w.write(content)
+                return ts_index, None  # 保持返回3个值
 
             except Exception as e:
                 error_msg = str(e)
-                if ("Remote end closed connection" in error_msg or
-                        "Connection aborted" in error_msg):
-                    if attempt < max_retries - 1:  # 尝试次数未达到最大值
-                        wait_time = retry_delay * (2 ** attempt)
-                        print(f"连接问题，{wait_time}秒后重试...")
-                        time.sleep(wait_time)
-                        continue
-                    else:
-                        print(f"重试{max_retries}次后仍然失败: {ts}")
+                if attempt < max_retries - 1:  # 尝试次数未达到最大值
+                    wait_time = retry_delay * (2 ** attempt)
+                    print(f"请求失败：{error_msg}，{wait_time}秒后重试...")
+                    time.sleep(wait_time)
+                    continue
                 else:
-                    print(f"下载失败 {ts}: {e}")
-
+                    print(f"重试{max_retries}次后仍然失败: {error_msg}")
                 if attempt == max_retries - 1:
-                    return ts_index, None, 0  # 失败时也返回3个值
-
-        return ts_index, None, 0  # 确保总是返回3个值
+                    return ts_index, ts  # 失败时返回索引和ts文件名
+        return ts_index, ts  # 确保失败时返回索引和ts文件名
 
     def Multithreading_download_ts_to_mp4(self, ts_list, max_workers):
-        filename = f'{self.name}.mp4'
-
-        # 预创建文件
-        with open(filename, 'wb') as w:
-            pass
-        path = self.output + '/' + filename
-        # 存储下载结果
-        download_results = {}
-
         # 多线程下载
+        false_list = []
         successful_downloads = 0
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # 提交任务
@@ -152,79 +144,16 @@ class VideoDownload:
 
             # 收集结果
             for future in as_completed(futures):
-                index, content, size = future.result()
-                if content is not None:
-                    download_results[index] = content
+                index, ts = future.result()
+                if ts is None:
                     successful_downloads += 1
-                    print(f"已完成下载: {successful_downloads}/{len(ts_list)}")
+                else:
+                    false_list.append(ts)
+                print(f"已完成下载: {successful_downloads}/{len(ts_list)}")
+        # todo 增加重试机制，将失败的ts集合返回，并重新重试
 
-        # 按顺序写入文件
-        print("正在合并文件...")
-        with open(f'{path}', 'ab') as w:
-            for i in range(len(ts_list)):
-                if i in download_results:
-                    w.write(download_results[i])
-
-        print(f'写入完成: 成功 {successful_downloads}/{len(ts_list)} 个片段')
-
-    def Multithreading_download_ts_to_mp4_v2(self, ts_list, max_workers):
-        # 确保输出目录存在
-        os.makedirs(self.output, exist_ok=True)
-        filepath = os.path.join(self.output, f'{self.name}.mp4')
-
-        # 创建索引映射，确保按顺序写入
-        download_order = {}  # 存储下载完成的片段
-        download_lock = threading.Lock()
-
-        def download_and_cache(ts_index, ts):
-            url = self.ts_base_url + ts
-            max_retries = 3
-
-            for attempt in range(max_retries):
-                try:
-                    response = requests.get(url=url, headers=self.headers, timeout=30)
-                    response.raise_for_status()
-                    # 直接返回内容，不存储在全局变量中
-                    return ts_index, response.content
-
-                except Exception as e:
-                    if attempt < max_retries - 1:
-                        time.sleep(2 ** attempt)
-                        continue
-                    else:
-                        print(f"下载失败 {ts}: {e}")
-                        return ts_index, None
-
-            return ts_index, None
-
-        # 使用信号量限制并发数
-        semaphore = threading.Semaphore(min(max_workers, 5))  # 限制最大并发数
-
-        def limited_download(limit_index, ts):
-            with semaphore:
-                return download_and_cache(limit_index, ts)
-
-        # 下载所有片段
-        completed_count = 0
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [executor.submit(limited_download, i, ts)
-                       for i, ts in enumerate(ts_list)]
-
-            # 按顺序写入文件
-            with open(filepath, 'wb') as final_file:
-                # 等待每个片段按顺序完成
-                for i in range(len(ts_list)):
-                    # 查找对应索引的future
-                    for future in futures:
-                        index, content = future.result()
-                        if index == i:
-                            if content is not None:
-                                final_file.write(content)
-                                completed_count += 1
-                            break
-                    print(f"已完成: {i + 1}/{len(ts_list)}")
-
-        print(f'写入完成: 成功 {completed_count}/{len(ts_list)} 个片段')
+        # 使用ffmpeg合并ts
+        self.ffmpeg.merge_ts_file()
 
     def main(self, max_workers=10):
         max_workers = int(max_workers)
