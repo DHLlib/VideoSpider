@@ -51,5 +51,5 @@ class ClassFetcher:
 
 if __name__ == '__main__':
     class_fetcher = ClassFetcher()
-    class_list = class_fetcher.get_class_list()
-    print(class_list)
+    class_list_ = class_fetcher.get_class_list()
+    print(class_list_)

@@ -83,6 +83,6 @@ class DetailFetcher:
 
 if __name__ == '__main__':
     # 30490
-    detail_fetcher = DetailFetcher('30490')
+    detail_fetcher = DetailFetcher('85223')
     url_list = detail_fetcher.get_play_lists()
     print(url_list)
