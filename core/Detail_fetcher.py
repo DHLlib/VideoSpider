@@ -48,7 +48,7 @@ class DetailFetcher:
                 parts = item.split("$")
                 if len(parts) >= 2:
                     episode, url = parts[0], parts[1]
-                    group_data.append({episode: url})
+                    group_data.append([episode, url])
             groups_list.append(group_data)
         self._play_url_lists = groups_list
 
