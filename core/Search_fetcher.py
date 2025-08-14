@@ -9,6 +9,7 @@ import json
 import requests
 
 from config.setting import YML_CONFIG, USER_AGENT
+from models.DTOs import SearchEpisodeDTO, VideoSearchDTO
 
 _yml_config = YML_CONFIG.get('ffzy')
 
@@ -25,7 +26,6 @@ class SearcherFetcher:
         self._page = _yml_config.get('page')
         self._page_size = _yml_config.get('page_size')
         self._search_url = None
-        # self._search_result = None
         self._search_result_list = []
         self._search_video()
 
@@ -60,11 +60,18 @@ class SearcherFetcher:
     # 处理查询结果
     def _handle_search_result(self, search_result):
         for i in search_result['list']:
-            self._search_result_list.append(i)  # 列表追加
+            search_data = SearchEpisodeDTO(
+            name=i.get('vod_name'),
+            vod_id = i.get('vod_id')
+            )
+            self._search_result_list.append(search_data)  # 列表追加
+
+
+        print(f'数据合并完成')
 
     # 获取查询结果
     def get_search_result_list(self):
-        return self._search_result_list
+        return VideoSearchDTO(search_list=self._search_result_list)
 
     # 获取url
     def get_search_url(self):
@@ -72,7 +79,10 @@ class SearcherFetcher:
 
 
 if __name__ == '__main__':
-    s = SearcherFetcher('奔跑吧')
+    s = SearcherFetcher('星期三')
     result_list = s.get_search_result_list()
     url = s.get_search_url()
-    print(result_list, '\n', url)
+    for i in result_list.search_list:
+        print(i.name)
+        print(i.vod_id)
+    print( url)

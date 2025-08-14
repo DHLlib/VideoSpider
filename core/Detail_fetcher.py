@@ -8,6 +8,7 @@
 import requests
 
 from config.setting import YML_CONFIG, USER_AGENT
+from models.DTOs import VideoEpisodeDTO, VideoDetailDTO
 
 _yml_config = YML_CONFIG.get('ffzy')
 
@@ -25,6 +26,7 @@ class DetailFetcher:
         self._vod_name = None
         self._vod_status = None
         self._vod_remarks = None
+        self._vod_total = None
         self._play_url_lists = None  # 播放列表
         # -----------先定义变量，再实现方法-----------------
         self._get_detail()  # 请求详情
@@ -34,23 +36,35 @@ class DetailFetcher:
         self._vod_name = result.get('vod_name').strip()
         self._vod_status = result.get('vod_status')
         self._vod_remarks = result.get('vod_remarks')
-
+        self._vod_total = result.get('vod_total')  # 总集数
         vod_play_url_str = result.get('vod_play_url')  # 播放列表
         groups = vod_play_url_str.split("$$$")
 
-        # 组转列表
+        video_detail = VideoDetailDTO(
+            name=self._vod_name,
+            status=self._vod_status,
+            remarks=self._vod_remarks,
+            total=self._vod_total,
+            url_list=[]
+        )
         groups_list = []
+        # 组转列表
         for group in groups:
             # 按 # 分割剧集，并过滤空字符串
             episodes = [item for item in group.split("#") if item]
             group_data = []
             for item in episodes:
                 parts = item.split("$")
-                if len(parts) >= 2:
-                    episode, url = parts[0], parts[1]
-                    group_data.append([episode, url])
+                if len(parts) >= 2:  # 剧集名称和播放链接
+                    # 创建VideoEpisodeDTO对象,保存剧集名称和播放链接
+                    video_episodes = VideoEpisodeDTO(
+                        episode_name=parts[0],
+                        episode_url=parts[1]
+                    )
+                    group_data.append(video_episodes)
             groups_list.append(group_data)
-        self._play_url_lists = groups_list
+        video_detail.url_list = groups_list
+        self._play_url_lists = video_detail
 
     # 获取页面详情
     def _get_detail(self):
@@ -59,9 +73,7 @@ class DetailFetcher:
         # 检查HTTP状态码
         if result.status_code != 200:
             raise requests.RequestException(f"HTTP请求失败，状态码: {result.status_code}")
-
         result_json = result.json()
-
         list_ = result_json.get('list')
         if list_:
             self._parse_detail_json(list_[0])
@@ -83,6 +95,13 @@ class DetailFetcher:
 
 if __name__ == '__main__':
     # 30490
-    detail_fetcher = DetailFetcher('85223')
+    detail_fetcher = DetailFetcher('83074')
     url_list = detail_fetcher.get_play_lists()
-    print(url_list)
+    print(url_list.name)
+    print(url_list.status)
+    print(url_list.total)
+    print(url_list.remarks)
+    for i in url_list.url_list:
+        for j in i:
+            print(j.episode_name)
+            print(j.episode_url)
