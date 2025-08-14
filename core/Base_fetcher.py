@@ -24,8 +24,8 @@ class BaseFetcher:
         return f"当前站点：{self._name}"
 
     # 请求
-    def _request(self, url, params=None):
-        response = requests.get(url, params=params, headers=self._headers)
+    def _request(self):
+        response = requests.get(url=self._sources_url, params=self._params, headers=self._headers)
         return response.json()
 
 
