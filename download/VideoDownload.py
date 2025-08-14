@@ -27,16 +27,17 @@ USER_AGENT = user_agent.USER_AGENTS[0]
 
 # 任意一集的m3u8，下载器
 class VideoDownload:
-    def __init__(self, url, name, type_=0):
+    def __init__(self, url, name, episode_name, type_=0):
         """
         :param url:
         :param type_: 0:m3u8,1:normal
-        :param name 剧集名称
+        :param episode_name 剧集名称
         """
         self.headers = {
             "user-agent": USER_AGENT
         }
-        self.name = name
+        self.episode_name = episode_name  # 集数名称
+        self.name = name  # 剧名
         self.url = url
         self.type = type_
         self.m3u8_url = self.classifier()  # https://vip.ffzy-play2.com/20221213/9185_83e0890b/
@@ -44,15 +45,23 @@ class VideoDownload:
             self.m3u8_url)  # https://vip.ffzy-play2.com/20221213/9185_83e0890b/2000k/hls/
         self.ts_base_url = None
         self.output = f"{os.path.dirname(os.path.dirname(__file__))}/output"
-        self.ffmpeg = FfmpegControl(self.output, self.name)
+        self.video_dir = self.dir_check_and_mkdir()
+        self.ffmpeg = FfmpegControl(self.video_dir, self.episode_name)
 
     # 分流器
     def classifier(self):
-        if self.type == 0:
+        if 'index.m3u8' in self.url:
             m3u8_url = self.url
         else:
             m3u8_url = self.normal_to_m3u8()
         return m3u8_url
+
+    # 检查文件夹
+    def dir_check_and_mkdir(self):
+        name_path = os.path.join(self.output, self.name)  # 剧名目录
+        if not os.path.exists(name_path):
+            os.mkdir(name_path)
+        return name_path
 
     @staticmethod
     def extracting_url(url):
@@ -93,7 +102,7 @@ class VideoDownload:
     def get_ts_list(self, url):
         result = requests.get(url=url, headers=self.headers).text
         ts_files = re.findall(r'([a-f0-9]+\.ts)', result)
-        with open(f'{self.output}/index.m3u8', 'w', encoding='utf-8') as w:
+        with open(f'{self.video_dir}/index.m3u8', 'w', encoding='utf-8') as w:
             w.write(result)
         ts_list = []
         for ts_file in ts_files:
@@ -117,7 +126,7 @@ class VideoDownload:
                 response.raise_for_status()
                 content = response.content
                 # 直接写入ts
-                with open(f'{self.output}/{ts}', 'wb') as ts_w:  # 使用二进制模式
+                with open(f'{self.video_dir}/{ts}', 'wb') as ts_w:  # 使用二进制模式
                     ts_w.write(content)
                 return ts_index, None  # 保持返回3个值
 
