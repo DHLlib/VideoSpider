@@ -27,8 +27,8 @@ def format_output_console(result_list):
     result_str = "=" * 50 + "\n"
     result_str += "搜索结果:\n"
     result_str += "=" * 50 + "\n"
-    for item, value in enumerate(result_list):
-        result_str += f"  [{item}] | {value.name} |  {value.vod_id}\n"
+    for item, episode_value in enumerate(result_list):
+        result_str += f"  [{item}] | {episode_value.name} |  {episode_value.vod_id}\n"
         result_str += "-" * 30 + "\n"
     result_str += f"共找到 {len(result_list)} 个结果\n"
     return result_str
@@ -66,14 +66,29 @@ if __name__ == '__main__':
         print("=" * 50 + "\n")
         print(f'剧名：{detail.name} | 状态：{detail.status} | 总集数：{detail.total} | 备注：{detail.remarks}')
         for i, value in enumerate(detail.url_list):
+            print(f'视频源：{i}')
             for index, j in enumerate(value):
-                print(f'序号：{i}-{index} | 集名：{j.episode_name} | 链接：{j.episode_url}')
+                print(f'序号：{index} | 集名：{j.episode_name} | 链接：{j.episode_url}')
 
-        choose_episode_num = int(input("请选择一个集数: "))
-
-        choose_episode_name = detail.url_list[1][choose_episode_num].episode_name
-        choose_episode_url = detail.url_list[1][choose_episode_num].episode_url
-        final_episode_name = detail.name + '-' + choose_episode_name
-        videodownloader = VideoDownload(url=choose_episode_url, name=final_episode_name).main()
+        video_source = int(input("请选择一个视频源: "))
+        choose_episode_num = input("请选择一个基数编号（按*标识全部下载）: ")
+        if video_source > len(detail.url_list) - 1:
+            print(f'不存在视频源，请重新选择')
+            video_source = int(input("请选择一个视频源: "))
+        if choose_episode_num == '*':
+            for v in detail.url_list[video_source]:
+                choose_episode_name = detail.episode_name + '-' + v.episode_name
+                choose_episode_url = v.episode_url
+                print(f'正在下载视频源：{choose_episode_num} | {choose_episode_name} | {choose_episode_url}')
+                videodownloader = VideoDownload(url=choose_episode_url, episode_name=choose_episode_name).main()
+        else:
+            choose_episode_name = detail.url_list[video_source][int(choose_episode_num)].episode_name
+            choose_episode_url = detail.url_list[video_source][int(choose_episode_num)].episode_url
+            final_episode_name = detail.name + '-' + choose_episode_name
+            print(f'正在下载视频源：{choose_episode_num} | {final_episode_name} | {choose_episode_url}')
+            videodownloader = VideoDownload(
+                url=choose_episode_url,
+                name=detail.name,
+                episode_name=final_episode_name
+            ).main()
         break
-
