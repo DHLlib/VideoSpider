@@ -46,3 +46,4 @@ class ConfigLoader:
                 return {}
         else:
             print(f'文件不存在')
+            return None
