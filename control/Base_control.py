@@ -13,16 +13,12 @@ from download.VideoDownload import VideoDownload
 
 
 def get_detail(vod_id):
-    return DetailFetcher(vod_id).get_play_lists(), DetailFetcher(vod_id).get_name()
+    return DetailFetcher(vod_id).get_play_lists()
 
 
 def search_video(video_name):
     search_result = SearcherFetcher(video_name).get_search_result_list()
-    search_list = []
-    for i, result in enumerate(search_result):
-        vod_id = result.get('vod_id')
-        vod_name = result.get('vod_name')
-        search_list.append([vod_name, vod_id])
+    search_list = search_result.search_list
     return search_list
 
 
@@ -32,26 +28,52 @@ def format_output_console(result_list):
     result_str += "搜索结果:\n"
     result_str += "=" * 50 + "\n"
     for item, value in enumerate(result_list):
-        result_str += f"  [{item}] | {value[0]} |  {value[1]}\n"
+        result_str += f"  [{item}] | {value.name} |  {value.vod_id}\n"
         result_str += "-" * 30 + "\n"
     result_str += f"共找到 {len(result_list)} 个结果\n"
     return result_str
 
 
+def download_video(url, v_name):
+    VideoDownload(url, v_name).main()
+
+
 if __name__ == '__main__':
-    name = input("请输入视频名称: ")
-    _result = search_video(name)
-    format_result = format_output_console(_result)
-    print(format_result)
-    choose_one = int(input("请选择一个序号: "))
+    _result = None
+    while True:
+        print("欢迎使用视频下载工具")
+        print("1. 搜索视频")
+        print("2. 退出")
+        choice = input("请选择: ")
+        if choice == "1":
+            name = input("请输入视频名称: ")
+            _result = search_video(name)
+        elif choice == "2":
+            exit()
+        else:
+            print("无效的选择，请重新输入")
 
-    video_id = _result[choose_one][1]
+        format_result = format_output_console(_result)
+        print(format_result)
+        choose_one = int(input("请选择一个序号: "))
+        if choose_one > len(_result):
+            print("无效的选择，请重新输入")
+            continue
+        video_id = _result[choose_one].vod_id
 
-    # 查询详情
-    detail, result_name = get_detail(video_id)
-    print("=" * 50 + "\n")
-    print(f'电影名称：{result_name}')
-    print(f'详情页：{detail}')
-    url = detail[1][0][1]
-    video_name_ = result_name + '-' + detail[1][0][0]
-    videodownloader = VideoDownload(url=url, name=video_name_).main()
+        # 查询详情
+        detail = get_detail(video_id)
+        print("=" * 50 + "\n")
+        print(f'剧名：{detail.name} | 状态：{detail.status} | 总集数：{detail.total} | 备注：{detail.remarks}')
+        for i, value in enumerate(detail.url_list):
+            for index, j in enumerate(value):
+                print(f'序号：{i}-{index} | 集名：{j.episode_name} | 链接：{j.episode_url}')
+
+        choose_episode_num = int(input("请选择一个集数: "))
+
+        choose_episode_name = detail.url_list[1][choose_episode_num].episode_name
+        choose_episode_url = detail.url_list[1][choose_episode_num].episode_url
+        final_episode_name = detail.name + '-' + choose_episode_name
+        videodownloader = VideoDownload(url=choose_episode_url, name=final_episode_name).main()
+        break
+
