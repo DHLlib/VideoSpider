@@ -1,0 +1,9 @@
+- key: ffzy
+  name: 非凡资源网
+  base_url: http://api.ffzyapi.com/api.php/provide/vod/
+  is_search: 1 # 是否支持搜索,1支持，0不支持
+
+- key: snzy
+  name: 索尼资源网
+  base_url: https://suoniapi.com/api.php/provide/vod/
+  is_search: 0
