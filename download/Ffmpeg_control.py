@@ -34,11 +34,11 @@ class Ffmpeg:
 
 
 class FfmpegControl(Ffmpeg):
-    def __init__(self, dir, name):
+    def __init__(self, dir_, name):
         super().__init__()
         # 获取输出目录
         # self.dir_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'output')
-        self.input_path = dir
+        self.input_path = dir_
         self._output_path = os.path.join(self.input_path, f'{name}.mp4')  # （如 "D:/TEMP/output.mp4"）
         self._index_m3u8 = os.path.join(self.input_path, f'index.m3u8')  # （如 "D:/TEMP/index.m3u8"）
 
