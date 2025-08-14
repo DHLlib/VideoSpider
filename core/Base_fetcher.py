@@ -25,8 +25,16 @@ class BaseFetcher:
 
     # 请求
     def _request(self):
-        response = requests.get(url=self._sources_url, params=self._params, headers=self._headers)
-        return response.json()
+        """请求数据"""
+        try:
+            response = requests.get(url=self._sources_url, params=self._params, headers=self._headers)
+            result = response.json()
+            if response.status_code == 200:
+                return result
+            return None
+        except Exception as e:
+            print(f"请求错误：{e}")
+            return None
 
 
 if __name__ == '__main__':
