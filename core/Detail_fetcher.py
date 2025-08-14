@@ -49,7 +49,7 @@ class DetailFetcher:
         )
         groups_list = []
         # 组转列表
-        for group in groups:
+        for index, group in enumerate(groups):
             # 按 # 分割剧集，并过滤空字符串
             episodes = [item for item in group.split("#") if item]
             group_data = []
@@ -62,6 +62,7 @@ class DetailFetcher:
                         episode_url=parts[1]
                     )
                     group_data.append(video_episodes)
+            # video_detail.url_list[from_[index]] = group_data
             groups_list.append(group_data)
         video_detail.url_list = groups_list
         self._play_url_lists = video_detail
@@ -97,11 +98,18 @@ if __name__ == '__main__':
     # 30490
     detail_fetcher = DetailFetcher('83074')
     url_list = detail_fetcher.get_play_lists()
-    print(url_list.name)
-    print(url_list.status)
-    print(url_list.total)
-    print(url_list.remarks)
-    for i in url_list.url_list:
+    print(f'剧名：{url_list.episode_name}')
+    print(f'剧集状态：{url_list.status}')
+    print(f'总数量：{url_list.total}')
+    print(f'备注：{url_list.remarks}')
+    episodes_list = url_list.url_list
+    print("==============================================")
+    for i in episodes_list:
         for j in i:
-            print(j.episode_name)
-            print(j.episode_url)
+            print(f'{j.episode_name}|{j.episode_url}')
+        print("==============================================")
+    print("==============================================")
+
+    # for i in url_list.url_list:
+    #     for j in i:
+    #         print(f'{j.episode_name}|{j.episode_url}')
