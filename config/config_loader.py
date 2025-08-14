@@ -8,7 +8,7 @@
 """
 配置文件加载器
 """
-
+import json
 import os
 
 import yaml
@@ -23,7 +23,7 @@ class ConfigLoader:
     def file_exists(self):
         if os.path.exists(self.file_path):
             return True
-        return False
+        raise FileNotFoundError(f"文件 {self.file_path} 不存在")
 
     def read_yaml_file(self):
         """
@@ -47,3 +47,24 @@ class ConfigLoader:
         else:
             print(f'文件不存在')
             return None
+
+    def read_json_file(self):
+        """
+        读取JSON文件并返回字典
+        :returns: dict: 解析后的字典数据
+        """
+        if self.file_path:
+            try:
+                with open(self.file_path, 'r', encoding='utf-8') as file:
+                    data = json.load(file)
+                    return data if data is not None else {}
+            except FileNotFoundError:
+                print(f"文件 {self.file_path} 不存在")
+                return {}
+            except json.JSONDecodeError as e:
+                print(f"JSON格式错误: {e}")
+                return {}
+            except Exception as e:
+                print(f"读取文件时发生错误: {e}")
+                return {}
+        return  {}
