@@ -11,22 +11,22 @@ from typing import List
 
 
 @dataclass
-class VideoEpisodeDTO: # 视频集
-    episode_name: str # 集名
-    episode_url: str # 集的URL
+class VideoEpisodeDTO:  # 视频集
+    episode_name: str  # 集名
+    episode_url: str  # 集的URL
 
 
 @dataclass
 class VideoDetailDTO:
     name: str
-    url_list: List[list[VideoEpisodeDTO]]
+    url_list: list[list[VideoEpisodeDTO]]
     status: str
     total: str
     remarks: str
 
 
 @dataclass
-class SearchEpisodeDTO: # 搜索集
+class SearchEpisodeDTO:  # 搜索集
     name: str
     vod_id: str
 
