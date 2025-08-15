@@ -15,10 +15,10 @@ class ClassFetcher(BaseFetcher):
     def __init__(self):
         super().__init__(type_='index', resource_name='ffzy')
         self._class_list = None
-        self._request()
+        self._get_class_list()
 
     # 请求接口
-    def _request(self):
+    def _get_class_list(self):
         result = super()._request()
         self._response_handler(result)
 
