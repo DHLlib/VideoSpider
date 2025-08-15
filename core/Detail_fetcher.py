@@ -5,24 +5,19 @@
 # @time: 2025/8/10 23:42
 # @version:
 
-import requests
-
-from config.setting import YML_CONFIG, USER_AGENT
+from core.Base_fetcher import BaseFetcher
 from models.DTOs import VideoEpisodeDTO, VideoDetailDTO
-
-_yml_config = YML_CONFIG.get('ffzy')
 
 
 # 获取视频详情
 
-class DetailFetcher:
+class DetailFetcher(BaseFetcher):
     def __init__(self, vod_id):
+        fetcher_type = 'detail'
+        super().__init__(type_=fetcher_type,resource_name='ffzy')
+        self._local_params = self._params.copy()
+
         self._vod_id = vod_id  # 视频id
-        self._base_url = _yml_config.get('base_url')
-        self._detail_path = _yml_config.get('detail')
-        self._headers = {
-            'user-agent': USER_AGENT
-        }
         self._vod_name = None
         self._vod_status = None
         self._vod_remarks = None
@@ -40,6 +35,7 @@ class DetailFetcher:
         vod_play_url_str = result.get('vod_play_url')  # 播放列表
         groups = vod_play_url_str.split("$$$")
 
+        # 创建VideoDetailDTO对象
         video_detail = VideoDetailDTO(
             name=self._vod_name,
             status=self._vod_status,
@@ -67,15 +63,12 @@ class DetailFetcher:
         video_detail.url_list = groups_list
         self._play_url_lists = video_detail
 
+
     # 获取页面详情
     def _get_detail(self):
-        detail_url = self._base_url + self._detail_path + str(self._vod_id)
-        result = requests.get(url=detail_url, headers=self._headers)
-        # 检查HTTP状态码
-        if result.status_code != 200:
-            raise requests.RequestException(f"HTTP请求失败，状态码: {result.status_code}")
-        result_json = result.json()
-        list_ = result_json.get('list')
+        self._local_params['ids'] = self._vod_id
+        result = super()._request(self._local_params) # 请求详情
+        list_ = result.get('list')
         if list_:
             self._parse_detail_json(list_[0])
         else:
@@ -96,9 +89,9 @@ class DetailFetcher:
 
 if __name__ == '__main__':
     # 30490
-    detail_fetcher = DetailFetcher('83074')
+    detail_fetcher = DetailFetcher('19212')
     url_list = detail_fetcher.get_play_lists()
-    print(f'剧名：{url_list.episode_name}')
+    print(f'剧名：{url_list.name}')
     print(f'剧集状态：{url_list.status}')
     print(f'总数量：{url_list.total}')
     print(f'备注：{url_list.remarks}')
