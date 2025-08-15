@@ -24,10 +24,11 @@ class BaseFetcher:
         return f"当前站点：{self._name}"
 
     # 请求
-    def _request(self):
+    def _request(self,params=None):
         """请求数据"""
         try:
-            response = requests.get(url=self._sources_url, params=self._params, headers=self._headers)
+            request_params = params if params is not None else self._params
+            response = requests.get(url=self._sources_url, params=request_params, headers=self._headers)
             result = response.json()
             if response.status_code == 200:
                 return result
