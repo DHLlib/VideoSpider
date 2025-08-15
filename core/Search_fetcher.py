@@ -56,7 +56,7 @@ class SearcherFetcher(BaseFetcher):
 
 
 if __name__ == '__main__':
-    s = SearcherFetcher('跑')
+    s = SearcherFetcher('JOJO')
     result_list = s.get_search_result_list()
     for i in result_list.search_list:
         print(i.name)

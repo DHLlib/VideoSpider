@@ -37,7 +37,7 @@ class APIBuilder:
     """构建API信息，根据类型，返回url，headers，params"""
 
     def __init__(self):
-        self.file_path = os.path.join(os.path.dirname(os.getcwd()), 'config', 'url_source.yaml')
+        self.file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config', 'url_source.yaml')
         self._PARAMS = _PARAMS
 
         self._params = None
