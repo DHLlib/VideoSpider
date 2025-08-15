@@ -23,7 +23,7 @@ _PARAMS = {
     },
     "index": {
         "ac": "list",
-        "t": "type_id"
+        "t": None
     },
     "default": {
         "pg": 1,
@@ -60,6 +60,7 @@ class APIBuilder:
                 break
 
     # 构建参数
+
     def _build_params(self, api_type):
         """构建API信息"""
         default_params = self._PARAMS.get('default').copy()  # 默认参数
