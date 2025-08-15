@@ -36,6 +36,10 @@ class BaseFetcher:
             print(f"请求错误：{e}")
             return None
 
+    # 解析返回
+    def _response_handler(self, result):
+        """解析返回数据"""
+        pass
 
 if __name__ == '__main__':
     base = BaseFetcher()
