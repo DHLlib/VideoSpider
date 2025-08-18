@@ -6,7 +6,6 @@
 # @version:
 import os.path
 import subprocess
-from pathlib import Path
 
 from utils.Log_Manager import log_manager, logger
 
@@ -38,15 +37,18 @@ class Ffmpeg:
 
 
 class FfmpegControl(Ffmpeg):
-    def __init__(self, dir_, name):
-        super().__init__()
+    def __init__(self, ts_cache_dir, video_filepath):
+        """
+        :param ts_cache_dir: ts文件路径，同时index.m3u8也要存放在此处
+        :param video_filepath: 视频最终文件路径
+        """
+        super().__init__() # 调用父类初始化方法
         # 获取输出目录
-        # self.dir_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'output')
-        self.input_path = dir_
-        self._output_path = os.path.join(self.input_path, f'{name}.mp4')  # （如 "D:/TEMP/output.mp4"）
-        logger.info(f'输出目录: {self._output_path}')
-        self._index_m3u8 = os.path.join(self.input_path, f'index.m3u8')  # （如 "D:/TEMP/index.m3u8"）
-        logger.info(f'm3u8文件路径: {self.input_path}')
+        self._ts_dir = ts_cache_dir  # （如"E:D:/TEMP/cache/JOJO的奇妙冒险"）
+        self._video_filepath = video_filepath  # （如 "D:/TEMP/output/JOJO的奇妙冒险/JOJO的奇妙冒险_第01集.mp4"）
+        logger.info(f'输出文件路径: {self._video_filepath}')
+        self._index_m3u8 = os.path.join(self._ts_dir, f'index.m3u8')  # （如 "D:/TEMP/index.m3u8"）
+        logger.info(f'm3u8&ts文件路径: {self._ts_dir}')
 
     @log_manager.log_method
     def merge_ts_file(self):
@@ -54,30 +56,29 @@ class FfmpegControl(Ffmpeg):
         使用 FFmpeg 合并 M3U8 播放列表中的所有 TS 文件
         :return:
         """
-        output_dir = str(Path(self._output_path).resolve())
-        index_m3u8 = str(Path(self._index_m3u8).resolve())
+        # output_dir = str(Path(self._video_filepath).resolve())
+        # index_m3u8 = str(Path(self._index_m3u8).resolve())
 
-        if not os.path.exists(self.input_path):
-            logger.error(f"M3U8 文件不存在: {self.input_path}")
-            raise FileNotFoundError(f"M3U8 文件不存在: {self.input_path}")
+        if not os.path.exists(self._ts_dir):
+            logger.error(f"M3U8 文件不存在: {self._ts_dir}")
+            raise FileNotFoundError(f"M3U8 文件不存在: {self._ts_dir}")
 
         # 执行合并
         try:
             cmd = [
                 "ffmpeg",
                 "-protocol_whitelist", "file,http,https,tcp,tls",  # 允许本地文件协议
-                "-i", index_m3u8,
+                "-i", self._index_m3u8,
                 "-c", "copy",  # 直接流复制，不重新编码
                 "-y",  # 覆盖输出文件
-                output_dir
+                self._video_filepath
             ]
             logger.info(f'执行命令：{cmd}')
             subprocess.run(cmd, check=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-            logger.info(f"合并成功！输出文件: {output_dir}")
+            logger.info(f"合并成功！输出文件: {self._video_filepath}")
             return
         except subprocess.CalledProcessError as e:
             logger.error(f"直接合并失败，尝试备用方法... (错误: {e.stderr.decode('utf-8')[:200]})")
-
 
 
 if __name__ == '__main__':

@@ -11,9 +11,9 @@ from urllib.parse import urlparse
 
 import requests
 
-from config.setting import USER_AGENTS
+from Ffmpeg_control import FfmpegControl
+from config.setting import OUTPUT_DIR, CACHE_DIR, USER_AGENTS, MAX_THREADS, MAX_RETRIES
 from utils.Log_Manager import *
-from .Ffmpeg_control import FfmpegControl
 
 # USER_AGENT = user_agent.USER_AGENTS[0]
 # config = source.ff
@@ -33,9 +33,16 @@ class VideoDownload:
         :param type_: 0:m3u8,1:normal
         :param episode_name 剧集名称
         """
+        # ----------- 获取配置------------
         self.headers = {
             "user-agent": random.choice(USER_AGENTS)
         }
+        self.max_retries = MAX_RETRIES
+        self.max_threads = MAX_THREADS
+        self.BASE_OUTPUT_DIR = OUTPUT_DIR
+        self.BASE_CACHE_DIR = CACHE_DIR
+
+        # ----------- 视频信息------------
         self.episode_name = episode_name  # 集数名称
         self.name = name  # 剧名
         self.url = url
@@ -44,9 +51,16 @@ class VideoDownload:
         self.base_m3u8_url = self.extracting_url(
             self.m3u8_url)  # https://vip.ffzy-play2.com/20221213/9185_83e0890b/2000k/hls/
         self.ts_base_url = None
-        self.output = f"{os.path.dirname(os.path.dirname(__file__))}/output"
-        self.video_dir = self.dir_check_and_mkdir()
-        self.ffmpeg = FfmpegControl(self.video_dir, self.episode_name)
+
+        # ----------- 下载配置------------
+        self.video_name = self.name + '_' + self.episode_name + '.mp4' # JOJO的奇妙冒险_第一集.mp4
+        self.output_dir = os.path.join(self.BASE_OUTPUT_DIR, self.name) # "E:\py_workspace\VideoSpider\output\JOJO的奇妙冒险"
+        self.video_file_path = os.path.join(self.BASE_OUTPUT_DIR,self.name, self.video_name) # 视频文件路径 : "E:\py_workspace\VideoSpider\output\JOJO的奇妙冒险\JOJO的奇妙冒险_第一集.mp4"
+        self.ts_dir = os.path.join(self.BASE_CACHE_DIR, self.name, self.episode_name) # ts缓存目录 "E:\py_workspace\VideoSpider\cache\JOJO的奇妙冒险\第一集"
+        self._check_and_mkdir_filepath()
+
+        self.ffmpeg = FfmpegControl(self.ts_dir, self.video_file_path)
+
 
     # 分流器
     @log_manager.log_method
@@ -59,11 +73,9 @@ class VideoDownload:
 
     # 检查文件夹
     @log_manager.log_method
-    def dir_check_and_mkdir(self):
-        name_path = os.path.join(self.output, self.name)  # 剧名目录
-        if not os.path.exists(name_path):
-            os.mkdir(name_path)
-        return name_path
+    def _check_and_mkdir_filepath(self):
+        os.makedirs(self.ts_dir, exist_ok=True)
+        os.makedirs(self.output_dir, exist_ok=True)
 
     @staticmethod
     @log_manager.log_method
@@ -111,7 +123,7 @@ class VideoDownload:
     def get_ts_list(self, url):
         result = requests.get(url=url, headers=self.headers).text
         ts_files = re.findall(r'([a-f0-9]+\.ts)', result)
-        with open(f'{self.video_dir}/index.m3u8', 'w', encoding='utf-8') as w:
+        with open(f'{self.ts_dir}/index.m3u8', 'w', encoding='utf-8') as w:
             w.write(result)
         ts_list = []
         for ts_file in ts_files:
@@ -123,7 +135,7 @@ class VideoDownload:
     def download_single_ts(self, ts_index, ts):
         url = self.ts_base_url + ts
         logger.info(f'下载链接：{url}')
-        max_retries = 3  # 最大重试次数
+        max_retries = self.max_retries  # 最大重试次数
         retry_delay = 1  # 重试延迟
 
         for attempt in range(max_retries):
@@ -137,7 +149,7 @@ class VideoDownload:
                 response.raise_for_status()
                 content = response.content
                 # 直接写入ts
-                with open(f'{self.video_dir}/{ts}', 'wb') as ts_w:  # 使用二进制模式
+                with open(f'{self.ts_dir}/{ts}', 'wb') as ts_w:  # 使用二进制模式
                     ts_w.write(content)
                 return ts_index, None  # 保持返回3个值
 
@@ -155,11 +167,11 @@ class VideoDownload:
         return ts_index, ts  # 确保失败时返回索引和ts文件名
 
     @log_manager.log_method
-    def Multithreading_download_ts_to_mp4(self, ts_list, max_workers):
+    def Multithreading_download_ts_to_mp4(self, ts_list, max_threads):
         # 多线程下载
         false_list = []
         successful_downloads = 0
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        with ThreadPoolExecutor(max_workers=max_threads) as executor:
             # 提交任务
             futures = [executor.submit(self.download_single_ts, i, ts) for i, ts in enumerate(ts_list)]
             logger.info("正在下载...")
@@ -177,15 +189,15 @@ class VideoDownload:
         # 使用ffmpeg合并ts
         self.ffmpeg.merge_ts_file()
 
-    def main(self, max_workers=10):
-        max_workers = int(max_workers)
+    def main(self):
+        max_threads = int(self.max_threads)
         # 提取ts文件链接
         ts_url = self.m3u8_to_tsfile()
         # 获取ts列表
         ts_list = self.get_ts_list(ts_url)
         # print(ts_list)
         # 多线程下载
-        self.Multithreading_download_ts_to_mp4(ts_list, max_workers)
+        self.Multithreading_download_ts_to_mp4(ts_list, max_threads)
 
 
 if __name__ == '__main__':
