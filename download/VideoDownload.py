@@ -4,18 +4,18 @@
 # @file: VideoSpider.py
 # @time: 2025/8/10 00:26
 # @version:
-import os
+import random
 import re
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import urlparse
 
 import requests
 
-from config import user_agent
+from config.setting import USER_AGENTS
+from utils.Log_Manager import *
 from .Ffmpeg_control import FfmpegControl
 
-USER_AGENT = user_agent.USER_AGENTS[0]
+# USER_AGENT = user_agent.USER_AGENTS[0]
 # config = source.ff
 # BASE_URL = config.get('base_url')
 # DETAIL = config.get('detail')
@@ -34,7 +34,7 @@ class VideoDownload:
         :param episode_name 剧集名称
         """
         self.headers = {
-            "user-agent": USER_AGENT
+            "user-agent": random.choice(USER_AGENTS)
         }
         self.episode_name = episode_name  # 集数名称
         self.name = name  # 剧名
@@ -49,6 +49,7 @@ class VideoDownload:
         self.ffmpeg = FfmpegControl(self.video_dir, self.episode_name)
 
     # 分流器
+    @log_manager.log_method
     def classifier(self):
         if 'index.m3u8' in self.url:
             m3u8_url = self.url
@@ -57,6 +58,7 @@ class VideoDownload:
         return m3u8_url
 
     # 检查文件夹
+    @log_manager.log_method
     def dir_check_and_mkdir(self):
         name_path = os.path.join(self.output, self.name)  # 剧名目录
         if not os.path.exists(name_path):
@@ -64,12 +66,14 @@ class VideoDownload:
         return name_path
 
     @staticmethod
+    @log_manager.log_method
     def extracting_url(url):
         # 解析URL
         parsed_url = urlparse(url)
-
+        logger.info("原始URL:", parsed_url)
         # 获取基础域名和路径，然后去掉文件名部分
         base_with_path = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
+        logger.info("基础域名和路径:", base_with_path)
         # 找到最后一个/的位置，去掉文件名部分
         last_slash_index = base_with_path.rfind('/')
         m3u8_base_url = base_with_path[:last_slash_index + 1]
@@ -77,6 +81,7 @@ class VideoDownload:
         return m3u8_base_url  # 输出: https://vip.ffzy-play2.com/20221213/9185_83e0890b/
 
     # 普通地址转m3u8
+    @log_manager.log_method
     def normal_to_m3u8(self):
         """
         :return: https://vip.ffzy-play2.com/20221213/9185_83e0890b/index.m3u8?sign=a220641044bd92b4a5c8e614b26400b9
@@ -86,11 +91,14 @@ class VideoDownload:
         pattern = r'const url\s*=\s*"([^"]+)"'
         match = re.search(pattern, result)
         parsed_url = urlparse(self.url)
+        logger.info("原始URL:", parsed_url)
         top_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+        logger.info("基础域名和路径:", top_url)
         mixed_m3u8_url = top_url + match[1]
         return mixed_m3u8_url
 
     # 提取标准m3u8地址，获取ts列表文件地址
+    @log_manager.log_method
     def m3u8_to_tsfile(self):
         result = requests.get(url=self.m3u8_url, headers=self.headers).text
         mixed_m3u8 = re.sub('#.*', '', result).strip()  # 提取'2000k/hls/mixed.m3u8'
@@ -99,6 +107,7 @@ class VideoDownload:
         return ts_list_url
 
     # 获取ts列表文件地址，并解析ts列表
+    @log_manager.log_method
     def get_ts_list(self, url):
         result = requests.get(url=url, headers=self.headers).text
         ts_files = re.findall(r'([a-f0-9]+\.ts)', result)
@@ -110,14 +119,16 @@ class VideoDownload:
         return ts_list
 
     # 下载ts
+    @log_manager.log_method
     def download_single_ts(self, ts_index, ts):
         url = self.ts_base_url + ts
+        logger.info(f'下载链接：{url}')
         max_retries = 3  # 最大重试次数
         retry_delay = 1  # 重试延迟
 
         for attempt in range(max_retries):
             try:
-                print(f"正在下载片段 {ts_index + 1}: {ts} (尝试 {attempt + 1}/{max_retries})")
+                logger.info(f"正在下载片段 {ts_index + 1}: {ts} (尝试 {attempt + 1}/{max_retries})")
                 response = requests.get(
                     url=url,
                     headers=self.headers,
@@ -134,15 +145,16 @@ class VideoDownload:
                 error_msg = str(e)
                 if attempt < max_retries - 1:  # 尝试次数未达到最大值
                     wait_time = retry_delay * (2 ** attempt)
-                    print(f"请求失败：{error_msg}，{wait_time}秒后重试...")
+                    logger.error(f"请求失败：{error_msg}，{wait_time}秒后重试...")
                     time.sleep(wait_time)
                     continue
                 else:
-                    print(f"重试{max_retries}次后仍然失败: {error_msg}")
+                    logger.error(f"重试{max_retries}次后仍然失败: {error_msg}")
                 if attempt == max_retries - 1:
                     return ts_index, ts  # 失败时返回索引和ts文件名
         return ts_index, ts  # 确保失败时返回索引和ts文件名
 
+    @log_manager.log_method
     def Multithreading_download_ts_to_mp4(self, ts_list, max_workers):
         # 多线程下载
         false_list = []
@@ -150,7 +162,8 @@ class VideoDownload:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # 提交任务
             futures = [executor.submit(self.download_single_ts, i, ts) for i, ts in enumerate(ts_list)]
-
+            logger.info("正在下载...")
+            logger.info(f'{futures}')
             # 收集结果
             for future in as_completed(futures):
                 index, ts = future.result()
@@ -158,7 +171,7 @@ class VideoDownload:
                     successful_downloads += 1
                 else:
                     false_list.append(ts)
-                print(f"已完成下载: {successful_downloads}/{len(ts_list)}")
+                logger.info(f"已完成下载: {successful_downloads}/{len(ts_list)}")
         # todo 增加重试机制，将失败的ts集合返回，并重新重试
 
         # 使用ffmpeg合并ts
