@@ -19,30 +19,32 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ---------日志配置---------
 DEBUG_ = SYS_CONFIG.get('debug')
 LOG_LEVEL = SYS_CONFIG.get('log_level')
-LOG_FILE = os.path.join(project_root,SYS_CONFIG['log_file'])
+LOG_FILE = os.path.join(project_root, SYS_CONFIG['log_file'])
 
 # ---------网络配置---------
 MAX_THREADS = int(SYS_CONFIG.get('max_threads'))
 MAX_RETRIES = int(SYS_CONFIG.get('max_retries'))
 TIMEOUT = int(SYS_CONFIG.get('timeout'))
 
+
 # ---------文件路径配置---------
 def check_directory():
     # 检查配置值
-    if SYS_CONFIG.get('output_dir',None) is not None:
-        output_dir = os.path.join(project_root,SYS_CONFIG['output_dir'])
+    if SYS_CONFIG.get('output_dir', None) is not None:
+        output_dir = os.path.join(project_root, SYS_CONFIG['output_dir'])
     else:
         output_dir = os.path.join(project_root, 'output')
-    if SYS_CONFIG.get('cache_dir',None) is not None:
-        cache_dir = os.path.join(project_root,SYS_CONFIG['cache_dir'])
+    if SYS_CONFIG.get('cache_dir', None) is not None:
+        cache_dir = os.path.join(project_root, SYS_CONFIG['cache_dir'])
     else:
         cache_dir = os.path.join(project_root, 'cache')
 
-    os.makedirs(output_dir, exist_ok=True) # 创建输出目录
+    os.makedirs(output_dir, exist_ok=True)  # 创建输出目录
     time.sleep(1)
-    os.makedirs(cache_dir, exist_ok=True) # 创建缓存目录
+    os.makedirs(cache_dir, exist_ok=True)  # 创建缓存目录
 
     return output_dir, cache_dir
+
 
 OUTPUT_DIR, CACHE_DIR = check_directory()
 

@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import urlparse
 
 import requests
+from tqdm import tqdm
 
 from config.setting import OUTPUT_DIR, CACHE_DIR, USER_AGENTS, MAX_THREADS, MAX_RETRIES
 from utils.Log_Manager import *
@@ -46,21 +47,23 @@ class VideoDownload:
         self.episode_name = episode_name  # 集数名称
         self.name = name  # 剧名
         self.url = url
-        self.type = type_
+        # self.type = type_
         self.m3u8_url = self.classifier()  # https://vip.ffzy-play2.com/20221213/9185_83e0890b/
         self.base_m3u8_url = self.extracting_url(
             self.m3u8_url)  # https://vip.ffzy-play2.com/20221213/9185_83e0890b/2000k/hls/
         self.ts_base_url = None
 
         # ----------- 下载配置------------
-        self.video_name = self.name + '_' + self.episode_name + '.mp4' # JOJO的奇妙冒险_第一集.mp4
-        self.output_dir = os.path.join(self.BASE_OUTPUT_DIR, self.name) # "E:\py_workspace\VideoSpider\output\JOJO的奇妙冒险"
-        self.video_file_path = os.path.join(self.BASE_OUTPUT_DIR,self.name, self.video_name) # 视频文件路径 : "E:\py_workspace\VideoSpider\output\JOJO的奇妙冒险\JOJO的奇妙冒险_第一集.mp4"
-        self.ts_dir = os.path.join(self.BASE_CACHE_DIR, self.name, self.episode_name) # ts缓存目录 "E:\py_workspace\VideoSpider\cache\JOJO的奇妙冒险\第一集"
+        self.video_name = self.name + '_' + self.episode_name + '.mp4'  # JOJO的奇妙冒险_第一集.mp4
+        self.output_dir = os.path.join(self.BASE_OUTPUT_DIR,
+                                       self.name)  # "E:\py_workspace\VideoSpider\output\JOJO的奇妙冒险"
+        self.video_file_path = os.path.join(self.BASE_OUTPUT_DIR, self.name,
+                                            self.video_name)  # 视频文件路径 : "E:\py_workspace\VideoSpider\output\JOJO的奇妙冒险\JOJO的奇妙冒险_第一集.mp4"
+        self.ts_dir = os.path.join(self.BASE_CACHE_DIR, self.name,
+                                   self.episode_name)  # ts缓存目录 "E:\py_workspace\VideoSpider\cache\JOJO的奇妙冒险\第一集"
         self._check_and_mkdir_filepath()
 
         self.ffmpeg = FfmpegControl(self.ts_dir, self.video_file_path)
-
 
     # 分流器
     @log_manager.log_method
@@ -82,10 +85,10 @@ class VideoDownload:
     def extracting_url(url):
         # 解析URL
         parsed_url = urlparse(url)
-        logger.info("原始URL:", parsed_url)
+        logger.info(f"原始URL:{parsed_url}")
         # 获取基础域名和路径，然后去掉文件名部分
         base_with_path = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
-        logger.info("基础域名和路径:", base_with_path)
+        logger.info(f"基础域名和路径:{base_with_path}")
         # 找到最后一个/的位置，去掉文件名部分
         last_slash_index = base_with_path.rfind('/')
         m3u8_base_url = base_with_path[:last_slash_index + 1]
@@ -103,9 +106,9 @@ class VideoDownload:
         pattern = r'const url\s*=\s*"([^"]+)"'
         match = re.search(pattern, result)
         parsed_url = urlparse(self.url)
-        logger.info("原始URL:", parsed_url)
+        logger.info(f"原始URL:{parsed_url}")
         top_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
-        logger.info("基础域名和路径:", top_url)
+        logger.info(f"基础域名和路径:{top_url}")
         mixed_m3u8_url = top_url + match[1]
         return mixed_m3u8_url
 
@@ -177,13 +180,29 @@ class VideoDownload:
             logger.info("正在下载...")
             logger.info(f'{futures}')
             # 收集结果
-            for future in as_completed(futures):
-                index, ts = future.result()
-                if ts is None:
-                    successful_downloads += 1
-                else:
-                    false_list.append(ts)
+            # 无进度条版本
+            # for future in as_completed(futures):
+            #     index, ts = future.result()
+            #     if ts is None:
+            #         successful_downloads += 1
+            #     else:
+            #         false_list.append(ts)
+
+            # 使用tqdm显示进度条
+            with tqdm(total=len(ts_list), desc="下载进度", unit="个") as pbar:
+                # 收集结果
+                for future in as_completed(futures):
+                    index, ts = future.result()
+                    if ts is None:
+                        successful_downloads += 1
+                    else:
+                        false_list.append(ts)
+                    # 更新进度条
+                    pbar.update(1)
+                    pbar.set_postfix(成功=f"{successful_downloads}/{len(ts_list)}")
+
                 logger.info(f"已完成下载: {successful_downloads}/{len(ts_list)}")
+
         # todo 增加重试机制，将失败的ts集合返回，并重新重试
 
         # 使用ffmpeg合并ts

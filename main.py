@@ -51,13 +51,13 @@ def main():
                 choose_episode_url = v.episode_url
                 print(f'正在下载视频源：{video_source} | {choose_episode_name} | {choose_episode_url}')
                 VideoDownload(url=choose_episode_url, name=detail.name,
-                              episode_name=choose_episode_name).main()  # 下载
+                              episode_name=v.episode_name).main()  # 下载
         else:
             choose_episode_name = detail.url_list[video_source][int(choose_episode_num)].episode_name
             choose_episode_url = detail.url_list[video_source][int(choose_episode_num)].episode_url
             final_episode_name = detail.name + '-' + choose_episode_name
             print(f'正在下载视频源：{video_source} | {final_episode_name} | {choose_episode_url}')
-            VideoDownload(url=choose_episode_url, name=detail.name, episode_name=final_episode_name).main()  # 下载
+            VideoDownload(url=choose_episode_url, name=detail.name, episode_name=choose_episode_name).main()  # 下载
         break
 
 

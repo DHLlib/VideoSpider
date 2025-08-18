@@ -34,8 +34,8 @@ def format_output_console(result_list):
     return result_str
 
 
-def download_video(url, v_name):
-    VideoDownload(url, v_name).main()
+def download_video(url, v_name, e_name):
+    VideoDownload(url, v_name, e_name).main()
 
 
 if __name__ == '__main__':
@@ -80,7 +80,11 @@ if __name__ == '__main__':
                 choose_episode_name = detail.episode_name + '-' + v.episode_name
                 choose_episode_url = v.episode_url
                 print(f'正在下载视频源：{choose_episode_num} | {choose_episode_name} | {choose_episode_url}')
-                videodownloader = VideoDownload(url=choose_episode_url, episode_name=choose_episode_name).main()
+                videodownloader = VideoDownload(
+                    url=choose_episode_url,
+                    name=detail.name,
+                    episode_name=v.episode_name
+                ).main()
         else:
             choose_episode_name = detail.url_list[video_source][int(choose_episode_num)].episode_name
             choose_episode_url = detail.url_list[video_source][int(choose_episode_num)].episode_url
