@@ -1,8 +1,8 @@
-output_dir: ./output
+output_dir: output
 cache_dir: cache
 max_threads: 10 # 最大线程数
 max_retries: 3 # 最大重试次数
 timeout: 30
 debug: false
 log_level: info
-log_file: ./log
+log_file: logs
