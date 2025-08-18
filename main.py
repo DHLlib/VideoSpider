@@ -36,7 +36,7 @@ def main():
         print("=" * 50 + "\n")
         print(f'剧名：{detail.name} | 状态：{detail.status} | 总集数：{detail.total} | 备注：{detail.remarks}')
         for i, value in enumerate(detail.url_list):
-            print(f'视频源：{i}')
+            print(f'视频源序号：{i}')
             for index, j in enumerate(value):
                 print(f'序号：{index} | 集名：{j.episode_name} | 链接：{j.episode_url}')
 
@@ -44,19 +44,19 @@ def main():
         choose_episode_num = input("请选择一个基数编号（按*标识全部下载）: ")
         if video_source > len(detail.url_list) - 1:
             print(f'不存在视频源，请重新选择')
-            video_source = int(input("请选择一个视频源: "))
+            video_source = int(input("请选择一个视频源序号: "))
         if choose_episode_num == '*':
             for v in detail.url_list[video_source]:
-                choose_episode_name = detail.episode_name + '-' + v.episode_name
+                choose_episode_name = detail.name + '-' + v.episode_name
                 choose_episode_url = v.episode_url
-                print(f'正在下载视频源：{choose_episode_num} | {choose_episode_name} | {choose_episode_url}')
+                print(f'正在下载视频源：{video_source} | {choose_episode_name} | {choose_episode_url}')
                 VideoDownload(url=choose_episode_url, name=detail.name,
                               episode_name=choose_episode_name).main()  # 下载
         else:
             choose_episode_name = detail.url_list[video_source][int(choose_episode_num)].episode_name
             choose_episode_url = detail.url_list[video_source][int(choose_episode_num)].episode_url
             final_episode_name = detail.name + '-' + choose_episode_name
-            print(f'正在下载视频源：{choose_episode_num} | {final_episode_name} | {choose_episode_url}')
+            print(f'正在下载视频源：{video_source} | {final_episode_name} | {choose_episode_url}')
             VideoDownload(url=choose_episode_url, name=detail.name, episode_name=final_episode_name).main()  # 下载
         break
 

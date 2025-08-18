@@ -47,4 +47,3 @@ def check_directory():
 OUTPUT_DIR, CACHE_DIR = check_directory()
 
 print(f'配置初始化完成')
-print(OUTPUT_DIR,CACHE_DIR)

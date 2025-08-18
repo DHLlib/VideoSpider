@@ -11,9 +11,9 @@ from urllib.parse import urlparse
 
 import requests
 
-from Ffmpeg_control import FfmpegControl
 from config.setting import OUTPUT_DIR, CACHE_DIR, USER_AGENTS, MAX_THREADS, MAX_RETRIES
 from utils.Log_Manager import *
+from .Ffmpeg_control import FfmpegControl
 
 # USER_AGENT = user_agent.USER_AGENTS[0]
 # config = source.ff
