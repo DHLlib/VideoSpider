@@ -8,7 +8,7 @@
 import requests
 
 from core.APIBuilder import APIBuilder
-from utils.Log_Manager import log_manager
+from utils.Log_Manager import log_manager, logger
 
 """基础获取器"""
 
@@ -36,7 +36,7 @@ class BaseFetcher:
                 return result
             return None
         except Exception as e:
-            print(f"请求错误：{e}")
+            logger.error(f"请求错误：{e}")
             return None
 
     # 解析返回

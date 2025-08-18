@@ -80,6 +80,7 @@ class DetailFetcher(BaseFetcher):
         if list_:
             self._parse_detail_json(list_[0])
         else:
+            logger.error(f"获取详情失败:{result}")
             raise ValueError(f"返回结果为空:{list_}")
 
     @log_manager.log_method

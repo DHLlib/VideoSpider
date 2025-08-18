@@ -30,10 +30,10 @@ class Ffmpeg:
                 logger.info(f'检测完成，已安装ffmpeg')
                 return True
             else:
-                logger.info("检测完成：请检查是否配置系统环境变量：PATH")
+                logger.error("检测完成：请检查是否配置系统环境变量：PATH")
                 return False
         except FileNotFoundError:
-            logger.info("检测完成：请安装FFmpeg或者检查环境变量.")
+            logger.error("检测完成：请安装FFmpeg或者检查环境变量.")
             return False
 
 
@@ -58,6 +58,7 @@ class FfmpegControl(Ffmpeg):
         index_m3u8 = str(Path(self._index_m3u8).resolve())
 
         if not os.path.exists(self.input_path):
+            logger.error(f"M3U8 文件不存在: {self.input_path}")
             raise FileNotFoundError(f"M3U8 文件不存在: {self.input_path}")
 
         # 执行合并
@@ -75,7 +76,8 @@ class FfmpegControl(Ffmpeg):
             logger.info(f"合并成功！输出文件: {output_dir}")
             return
         except subprocess.CalledProcessError as e:
-            logger.info(f"直接合并失败，尝试备用方法... (错误: {e.stderr.decode('utf-8')[:200]})")
+            logger.error(f"直接合并失败，尝试备用方法... (错误: {e.stderr.decode('utf-8')[:200]})")
+
 
 
 if __name__ == '__main__':

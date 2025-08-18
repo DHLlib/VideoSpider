@@ -32,10 +32,10 @@ class ClassFetcher(BaseFetcher):
             self._class_list = class_list  # 赋值给类变量
             if class_list:
                 self._clean_class_json_file()
-                print('正在更新类别列表...')
+                logger.info('正在更新类别列表...')
                 with open('../config/Class.json', 'w', encoding='utf-8') as w:
                     json.dump(class_list, w, ensure_ascii=False, indent=4)
-                print('更新类别列表成功...')
+                logger.info('更新类别列表成功...')
 
     # 清空文件内容
     @staticmethod
@@ -43,7 +43,7 @@ class ClassFetcher(BaseFetcher):
         if os.path.exists('../config/Class.json'):
             with open('../config/Class.json', 'w') as w:
                 w.truncate()
-            print('清空类别列表成功...')
+            logger.info('清空类别列表成功...')
 
     # 获取类别列表
     @log_manager.log_method
