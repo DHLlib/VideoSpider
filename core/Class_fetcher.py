@@ -8,6 +8,7 @@ import json
 import os
 
 from core.Base_fetcher import BaseFetcher
+from utils.Log_Manager import log_manager, logger
 
 
 # 获取类别
@@ -20,9 +21,11 @@ class ClassFetcher(BaseFetcher):
     # 请求接口
     def _get_class_list(self):
         result = super()._request()
+        logger.info(f'获取类别列表接口返回数据: {result}')
         self._response_handler(result)
 
     # 处理返回数据
+    @log_manager.log_method
     def _response_handler(self, result):
         if result:
             class_list = result.get('class')
@@ -43,6 +46,7 @@ class ClassFetcher(BaseFetcher):
             print('清空类别列表成功...')
 
     # 获取类别列表
+    @log_manager.log_method
     def get_class_list(self):
         return self._class_list
 

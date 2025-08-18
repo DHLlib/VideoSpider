@@ -7,7 +7,7 @@
 
 from core.Base_fetcher import BaseFetcher
 from models.DTOs import SearchEpisodeDTO, VideoSearchDTO
-
+from utils.Log_Manager import *
 
 # 搜索视频提取器
 class SearcherFetcher(BaseFetcher):
@@ -27,14 +27,16 @@ class SearcherFetcher(BaseFetcher):
     # 搜索视频
     def _get_search_all_result(self):
         self._local_params['wd'] = self.video_name
+        logger.info(f"正在搜索：{self.video_name}...")
         page_ = 1
         while True:
             self._local_params['pg'] = page_
-            print(f"正在搜索第{page_}页...")
+            logger.info(f"正在搜索第{page_}页...")
             search_all_result = super()._request(params=self._local_params)
-            print(search_all_result)
+            logger.info(f'全部搜索结果：{search_all_result}')
             self._handle_search_result(search_all_result)
             page_count = search_all_result.get('pagecount')
+            logger.info(f'总页数：{page_count}')
             if page_count <= page_:
                 break
             else:
@@ -42,16 +44,20 @@ class SearcherFetcher(BaseFetcher):
 
     # 处理查询结果
     def _handle_search_result(self, search_result):
+        logger.info(f'正在处理数据...')
+        logger.info({'search_result': search_result})
         for search_index in search_result['list']:
             search_data = SearchEpisodeDTO(
                 name=search_index.get('vod_name'),
                 vod_id=search_index.get('vod_id')
             )
             self._search_result_list.append(search_data)  # 列表追加
-        print(f'数据合并完成')
+        logger.info(f'数据合并完成')
 
     # 获取查询结果
     def get_search_result_list(self):
+        logger.info(f'正在获取数据...')
+        logger.info(f'{self._search_result_list}')
         return VideoSearchDTO(search_list=self._search_result_list)
 
 

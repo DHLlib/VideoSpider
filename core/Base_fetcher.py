@@ -8,6 +8,7 @@
 import requests
 
 from core.APIBuilder import APIBuilder
+from utils.Log_Manager import log_manager
 
 """基础获取器"""
 
@@ -24,6 +25,7 @@ class BaseFetcher:
         return f"当前站点：{self._name}"
 
     # 请求
+    @log_manager.log_method
     def _request(self,params=None):
         """请求数据"""
         try:

@@ -9,8 +9,8 @@
 import os.path
 import random
 
-from config.config_loader import ConfigLoader
-from config.setting import USER_AGENTS
+from config.setting import URL_SOURCES, USER_AGENTS
+from utils.Log_Manager import log_manager, logger
 
 _PARAMS = {
     "search": {
@@ -39,7 +39,7 @@ class APIBuilder:
     def __init__(self):
         self.file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config', 'url_source.yaml')
         self._PARAMS = _PARAMS
-
+        self.URL_SOURCES = URL_SOURCES
         self._params = None
         self._headers = None
         self._sources_url = None
@@ -47,20 +47,19 @@ class APIBuilder:
         self._name = None
 
     # 读取配置信息,获取基础url 和 是否支持搜索
+    @log_manager.log_method
     def _read_config(self, source_keyname):
         """读取配置信息"""
-        config_loader = ConfigLoader(self.file_path)
-        configs = config_loader.read_yaml_file()
-        for config in configs:
-            # 匹配资源站
-            if config.get('key') == source_keyname:
-                self._sources_url = config.get('base_url')
-                self._is_search = config.get('is_search')
-                self._name = config.get('name')
-                break
+        config = self.URL_SOURCES[0]
+        logger.info(f'视频源：{config}')
+        # 匹配资源站
+        if config.get('key') == source_keyname:
+            self._sources_url = config.get('base_url')
+            self._is_search = config.get('is_search')
+            self._name = config.get('name')
 
     # 构建参数
-
+    @log_manager.log_method
     def _build_params(self, api_type):
         """构建API信息"""
         default_params = self._PARAMS.get('default').copy()  # 默认参数
@@ -84,23 +83,23 @@ class APIBuilder:
         :param api_type: api类型，如：search，detail,index
         """
         self._read_config(source_keyname)
-        if self._is_search == 0 and api_type == 'search': # 不支持搜索
+        if self._is_search == 0 and api_type == 'search':  # 不支持搜索
             print(f"该资源站不支持搜索功能")
             self._build_params(None)
             self._build_headers()
         else:
             self._build_params(api_type)
             self._build_headers()
-
+    @log_manager.log_method
     def get_api_info(self):
         """返回API信息"""
-        return self._sources_url, self._headers, self._params,self._name
+        return self._sources_url, self._headers, self._params, self._name
 
 
 if __name__ == '__main__':
     api = APIBuilder()
     api.begin_builder('ffzy', 'search')
-    url, headers, params,name = api.get_api_info()
+    url, headers, params, name = api.get_api_info()
     print(url)
     print(headers)
     print(params)

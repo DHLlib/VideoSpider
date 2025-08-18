@@ -7,6 +7,7 @@
 
 from core.Base_fetcher import BaseFetcher
 from models.DTOs import VideoEpisodeDTO, VideoDetailDTO
+from utils.Log_Manager import *
 
 
 # 获取视频详情
@@ -14,7 +15,7 @@ from models.DTOs import VideoEpisodeDTO, VideoDetailDTO
 class DetailFetcher(BaseFetcher):
     def __init__(self, vod_id):
         fetcher_type = 'detail'
-        super().__init__(type_=fetcher_type,resource_name='ffzy')
+        super().__init__(type_=fetcher_type, resource_name='ffzy')
         self._local_params = self._params.copy()
 
         self._vod_id = vod_id  # 视频id
@@ -27,6 +28,7 @@ class DetailFetcher(BaseFetcher):
         self._get_detail()  # 请求详情
 
     # 解析detail
+    @log_manager.log_method
     def _parse_detail_json(self, result):
         self._vod_name = result.get('vod_name').strip()
         self._vod_status = result.get('vod_status')
@@ -34,6 +36,12 @@ class DetailFetcher(BaseFetcher):
         self._vod_total = result.get('vod_total')  # 总集数
         vod_play_url_str = result.get('vod_play_url')  # 播放列表
         groups = vod_play_url_str.split("$$$")
+        logger.info(
+            f"剧集名称：{self._vod_name},"
+            f"剧集状态：{self._vod_status},"
+            f"总集数：{self._vod_total},"
+            f"备注：{self._vod_remarks},"
+            f"播放列表：{groups}")
 
         # 创建VideoDetailDTO对象
         video_detail = VideoDetailDTO(
@@ -61,28 +69,32 @@ class DetailFetcher(BaseFetcher):
             # video_detail.url_list[from_[index]] = group_data
             groups_list.append(group_data)
         video_detail.url_list = groups_list
+        logger.info(f"获取详情成功:{video_detail}")
         self._play_url_lists = video_detail
-
 
     # 获取页面详情
     def _get_detail(self):
         self._local_params['ids'] = self._vod_id
-        result = super()._request(self._local_params) # 请求详情
+        result = super()._request(self._local_params)  # 请求详情
         list_ = result.get('list')
         if list_:
             self._parse_detail_json(list_[0])
         else:
             raise ValueError(f"返回结果为空:{list_}")
 
+    @log_manager.log_method
     def get_name(self):
         return self._vod_name
 
+    @log_manager.log_method
     def get_status(self):
         return self._vod_status
 
+    @log_manager.log_method
     def get_id(self):
         return self._vod_id
 
+    @log_manager.log_method
     def get_play_lists(self):
         return self._play_url_lists
 
