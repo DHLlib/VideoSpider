@@ -11,17 +11,9 @@ from download.VideoDownload import VideoDownload
 def main():
     _result = None
     while True:
-        print("欢迎使用视频下载工具")
-        print("1. 搜索视频")
-        print("2. 退出")
-        choice = input("请选择: ")
-        if choice == "1":
-            name = input("请输入视频名称: ")
-            _result = search_video(name)
-        elif choice == "2":
-            exit()
-        else:
-            print("无效的选择，请重新输入")
+
+        name = input("请输入视频名称: ")
+        _result = search_video(name)
 
         format_result = format_output_console(_result)
         print(format_result)

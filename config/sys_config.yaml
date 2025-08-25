@@ -1,5 +1,5 @@
-output_dir: output
-cache_dir: cache
+output_dir: D:\电影or电视剧
+cache_dir: D:\电影or电视剧\cache
 max_threads: 10 # 最大线程数
 max_retries: 3 # 最大重试次数
 timeout: 30

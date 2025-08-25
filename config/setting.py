@@ -46,6 +46,18 @@ def check_directory():
     return output_dir, cache_dir
 
 
-OUTPUT_DIR, CACHE_DIR = check_directory()
+def check_directory_v2():
+    output_dir = SYS_CONFIG.get('output_dir', None)
+    cache_dir = SYS_CONFIG.get('cache_dir', None)
+    if output_dir is None or cache_dir is None:
+        raise ValueError(f"配置为空，请检查sys_config文件")
+    else:
+        os.makedirs(output_dir, exist_ok=True)  # 创建输出目录
+        time.sleep(1)
+        os.makedirs(cache_dir, exist_ok=True)  # 创建缓存目录
+        return output_dir, cache_dir
+
+
+OUTPUT_DIR, CACHE_DIR = check_directory_v2()
 
 print(f'配置初始化完成')
