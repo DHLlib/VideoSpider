@@ -9,11 +9,12 @@ from core.Base_fetcher import BaseFetcher
 from models.DTOs import SearchEpisodeDTO, VideoSearchDTO
 from utils.Log_Manager import *
 
+
 # 搜索视频提取器
 class SearcherFetcher(BaseFetcher):
-    def __init__(self, video_name, page=1, page_size=20):
+    def __init__(self, video_name, page=1, page_size=20, resource_name='ffzy'):
         fetcher_type = 'search'
-        super().__init__(type_=fetcher_type, resource_name='ffzy')
+        super().__init__(type_=fetcher_type, resource_name=resource_name)
         self._local_params = self._params.copy()
         self.video_name = video_name
         self._search_result_list = []
